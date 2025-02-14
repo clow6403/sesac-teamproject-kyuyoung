@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: bluegreen
+  namespace: bluegreen
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: test
+          image: 390844761387.dkr.ecr.ap-northeast-2.amazonaws.com/test:v1 # 초기 버전 (Blue)
+          # image: 390844761387.dkr.ecr.ap-northeast-2.amazonaws.com/test:v2 # 신규 버전(Green)
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+  strategy:
+    blueGreen:
+      activeService: test-app-active
+      previewService: test-app-preview
+      autoPromotionEnabled: false # 수동 승격 설정
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-app-active
+  namespace: bluegreen
+spec:
+  selector:
+    app: test-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-app-preview
+  namespace: bluegreen
+spec:
+  selector:
+    app: test-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

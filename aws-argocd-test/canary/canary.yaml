@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary
+  namespace: canary
+spec:
+  replicas: 5
+  revisionHistoryLimit: 2
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20          #트래픽의 20%를 새 버전에 할당
+        - pause: {}              #duration 설정 안했기때문에 수동으로 명령어 입력해줘야 다음단계 배포 시작
+        - setWeight: 40          
+        - pause: {duration: 20s} #20초 동안 새 버전 상태 확인
+        - setWeight: 60          
+        - pause: {duration: 20s} 
+        - setWeight: 80         
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      serviceAccountName: canary-access-db
+      containers:
+      - name: test
+        image: 390844761387.dkr.ecr.ap-northeast-2.amazonaws.com/test:v1 # 초기 버전(v1)
+        # image: 390844761387.dkr.ecr.ap-northeast-2.amazonaws.com/test:v2 # 신규 버전(v2)
+        ports:
+          - containerPort: 30009
+        imagePullPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary
+  namespace: canary
+spec:
+  selector:
+    app: test-app
+  ports:
+    - protocol: TCP
+      port: 30009 # 외부접근 포트
+      targetPort: 30009 # 컨테이너 내부 포트

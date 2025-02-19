@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # 필요한 이름 지정
+  name: argo-rollouts-clusterrole
+  namespace: collector
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "events", "secrets", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts", "rollouts/status", "experiments", "analysisruns", "analysistemplates", "clusteranalysistemplates"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
